@@ -22,12 +22,18 @@ async function run(){
     try{
 
         const productsCollection = client.db("Admin-panel").collection("products");
+        const ordersCollection = client.db("Admin-panel").collection("orders");
         const usersCollection = client.db("Admin-panel").collection("users");
 
 
         app.post("/products", async (req, res) => {
             const product = req.body;
             const result = productsCollection.insertOne(product);
+            res.send(result);
+          });
+        app.post("/orders", async (req, res) => {
+            const order = req.body;
+            const result = ordersCollection.insertOne(order);
             res.send(result);
           });
         app.post("/users", async (req, res) => {
@@ -42,6 +48,17 @@ async function run(){
             const result = await productsCollection.find(query).sort({ $natural: -1 }).toArray();
             res.send(result);
           });
+          app.get("/my-orders", async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const result = await ordersCollection.find(query).sort({ $natural: -1 }).toArray();
+            res.send(result);
+          });
+          app.get("/all-products", async (req, res) => {
+            const query = {};
+            const result = await productsCollection.find(query).sort({ $natural: -1 }).toArray();
+            res.send(result);
+          });
           app.get("/products/:id", async (req, res) => {
             const id = req.params.id;
             console.log(id)
@@ -49,27 +66,6 @@ async function run(){
             const result = await productsCollection.findOne(filter);
             res.send(result);
           });
-
-          app.patch('/edit-product/:id', async (req, res)=>{
-            const id = req.params.id
-            const product = req.body
-            const filter = { _id: ObjectId(id) };
-            const options = { upsert: true };
-            const updatedDoc = {
-            $set: {
-                name: product.name,
-                price: product.price,
-                description: product.description
-            },
-            };
-            const result = await productsCollection.updateOne(
-            filter,
-            updatedDoc,
-            options
-            );
-            res.send(result);
-            console.log(id)
-          })
 
           app.get("/users/admin/:email", async (req, res) => {
             const email = req.params.email;
